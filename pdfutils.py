@@ -5,7 +5,7 @@ import sys
 from pypdf import PdfReader, PdfWriter
 
 def parse_arguments():
-    parser = argparse.ArgumentParser(description="PFD Manipulation Utilities")
+    parser = argparse.ArgumentParser(description="PFD Manipulation Utilities by NLiaquin")
     subparsers = parser.add_subparsers(dest="command", help="Commands")
     remove_parser = subparsers.add_parser("remove", help="Remove pages from a PDF")
     remove_parser.add_argument("input_pdf", type=str, help="Path to the input PDF file")
@@ -17,6 +17,10 @@ def parse_arguments():
     insert_parser.add_argument("target_pdf", type=str, help="Path to the target PDF file")
     insert_parser.add_argument("output_pdf", type=str, help="Path to the output PDF file")
     insert_parser.add_argument("page_index", type=int, help="Index at which to insert the pages in the target pdf (0-indexed)")
+
+    combine_parser = subparsers.add_parser("combine", help="Combine all pages from multiple PDF files into one, in listed order")
+    combine_parser.add_argument('pdfs', type=str, nargs="+", help="List of PDF files to combine")
+    combine_parser.add_argument('output_pdf', type=str, help="Path to the output PDF file")
 
     return parser.parse_args()
 
@@ -48,6 +52,16 @@ def insert_pages(source_pdf, target_pdf, output_pdf, page_index):
     with open(output_pdf, "wb") as f:
         writer.write(f)
 
+def combine_pdfs(pdfs, output_pdf):
+    writer = PdfWriter()
+
+    for pdf in pdfs:
+        reader = PdfReader(pdf)
+        for page in reader.pages:
+            writer.add_page(page)
+
+    with open(output_pdf, "wb") as f:
+        writer.write(f)
 
 def main():
     args = parse_arguments()
@@ -56,7 +70,9 @@ def main():
         remove_pages(args.input_pdf, args.output_pdf, args.pages)
     elif args.command == "insert":
         insert_pages(args.source_pdf, args.target_pdf, args.output_pdf, args.page_index)
-
+    elif args.command == "combine":
+        combine_pdfs(args.pdfs, args.output_pdf)
 
 if __name__ == "__main__":
     main()
+
